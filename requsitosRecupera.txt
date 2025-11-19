@@ -1,0 +1,95 @@
+🧩 1. Crea o usa una cuenta Gmail exclusiva
+
+🔹 Usa una cuenta tipo:
+miapp.notificaciones@gmail.com
+(recomendado: no uses tu cuenta personal)
+
+🔐 2. Activa la verificación en dos pasos
+
+Inicia sesión en Gmail.
+
+Entra a 👉 https://myaccount.google.com/security
+
+En la sección “Cómo inicias sesión en Google”, busca “Verificación en dos pasos”.
+
+Actívala (te pedirá un número o método de seguridad).
+
+⚠️ Este paso es obligatorio para poder crear la contraseña de aplicación.
+
+🔑 3. Crea la “contraseña de aplicación” (App Password)
+
+Una vez activada la verificación en dos pasos, ve a 👉
+https://myaccount.google.com/apppasswords
+
+(si te pide iniciar sesión, hazlo con la cuenta que usarás para enviar correos)
+
+Te aparecerá una pantalla que dice:
+
+Selecciona la app: “Correo”
+
+Selecciona el dispositivo: “Otro (nombre personalizado)”
+
+Escribe algo como MiAppNode o SistemaRecuperacion.
+
+Presiona “Crear” ✅
+
+Google te mostrará una contraseña de 16 caracteres, algo así:
+
+abcd efgh ijkl mnop
+
+
+👉 Guárdala bien, solo se muestra una vez.
+
+⚙️ 4. Crear tu archivo .env
+
+En la raíz de tu proyecto Node.js crea un archivo llamado .env
+y coloca dentro:
+
+GMAIL_USER=miapp.notificaciones@gmail.com
+GMAIL_APP_PASSWORD=abcdefghijklmnoq
+
+
+⚠️ Importante: no pongas espacios entre los valores.
+Ejemplo correcto ✅
+GMAIL_APP_PASSWORD=abcd efgh ijkl mnop ❌ → NO
+GMAIL_APP_PASSWORD=abcdefghijklmnop ✅ → SÍ (todo junto)
+
+🧱 5. Verifica que tu código lea el .env
+
+Tu código ya lo tiene bien configurado:
+
+import dotenv from 'dotenv'
+dotenv.config(); // lee el .env
+
+
+Y luego usas:
+
+user: process.env.GMAIL_USER,
+pass: process.env.GMAIL_APP_PASSWORD
+
+
+Perfecto ✅
+
+🧪 6. Probar el envío
+
+Haz una petición POST a tu endpoint que llame requestCode, por ejemplo:
+
+POST /api/requestCode
+{
+  "correo": "usuario@ejemplo.com"
+}
+
+
+Y en consola deberías ver:
+
+✅ Correo REAL enviado a: usuario@ejemplo.com
+📫 ID del mensaje: <...>
+
+
+Si aparece un error como "Invalid login" o "5.7.0 Authentication Required", revisa:
+
+Que el correo y la contraseña de aplicación estén bien.
+
+Que hayas activado la verificación en dos pasos.
+
+Que la contraseña no tenga espacios.
