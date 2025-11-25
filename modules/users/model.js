@@ -17,14 +17,14 @@ export async function createUser(nombre, apellido, correo, telefono, direccion, 
 
 // Obtener todos los usuarios
 export async function getAllUsers() {
-  const result = await pool.query("SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario FROM usuarios");
+  const result = await pool.query("SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario, es_super_admin FROM usuarios");
   return result.rows;
 }
 
 // Obtener usuario por ID
 export async function getUserById(id_usuario) {
   const result = await pool.query(
-    "SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario FROM usuarios WHERE id_usuario = $1",
+    "SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario, es_super_admin FROM usuarios WHERE id_usuario = $1",
     [id_usuario]
   );
   return result.rows[0] || null;

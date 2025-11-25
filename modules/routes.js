@@ -11,7 +11,9 @@ import {
 // Importar controladores de pedidos
 import {
   createPedidoController, getPedidos, getPedido, 
-  getPedidosByUserController, updatePedidoController, deletePedidoController
+  getPedidosByUserController, updatePedidoController, 
+  updatePedidoEstadoController, deletePedidoController,
+  getPedidosByAdminController
 } from "./pedidos/controller.js";
 
 // Importar controladores de pedido_producto
@@ -25,6 +27,24 @@ import {
   createTokenController, getTokens, getToken, getTokensByUserController,
   updateTokenController, deleteTokenController, cleanExpiredTokensController
 } from "./token/controller.js";
+
+// Importar controladores de ubicación
+import {
+  createUbicacionController, getUbicaciones, getUbicacion,
+  getUbicacionesByUserController, updateUbicacionController, deleteUbicacionController
+} from "./ubicacion/controller.js";
+
+// Importar controladores de productos
+import {
+  createProductoController, getProductos, getProducto,
+  getProductosByUserController, getProductosByCategoryController,
+  updateProductoController, deleteProductoController
+} from "./productos/controller.js";
+
+// Importar controladores de productos combinados
+import {
+  getProductosCombinados, getProductosDB
+} from "./productos/combined-controller.js";
 
 const router = express.Router();
 
@@ -51,7 +71,9 @@ router.post("/pedidos", createPedidoController);
 router.get("/pedidos", getPedidos);
 router.get("/pedidos/:id", getPedido);
 router.get("/pedidos/usuario/:id_usuario", getPedidosByUserController);
+router.get("/pedidos/admin/:id_admin", getPedidosByAdminController); // Pedidos con productos del admin
 router.put("/pedidos/:id", updatePedidoController);
+router.put("/pedidos/:id/estado", updatePedidoEstadoController);
 router.delete("/pedidos/:id", deletePedidoController);
 
 // ============ RUTAS DE PEDIDO_PRODUCTO ============
@@ -70,5 +92,27 @@ router.get("/tokens/usuario/:id_usuario", getTokensByUserController);
 router.put("/tokens/:id", updateTokenController);
 router.delete("/tokens/:id", deleteTokenController);
 router.delete("/tokens/clean/expired", cleanExpiredTokensController);
+
+// ============ RUTAS DE UBICACIÓN ============
+router.post("/ubicaciones", createUbicacionController);
+router.get("/ubicaciones", getUbicaciones);
+router.get("/ubicaciones/:id", getUbicacion);
+router.get("/ubicaciones/usuario/:id_usuario", getUbicacionesByUserController);
+router.put("/ubicaciones/:id", updateUbicacionController);
+router.delete("/ubicaciones/:id", deleteUbicacionController);
+
+// ============ RUTAS DE PRODUCTOS ============
+// Rutas especiales (deben ir primero)
+router.get("/productos/combinados", getProductosCombinados); // BD + API
+router.get("/productos/database", getProductosDB); // Solo BD
+router.get("/productos/usuario/:id_usuario", getProductosByUserController);
+router.get("/productos/categoria/:category", getProductosByCategoryController);
+
+// Rutas CRUD normales
+router.post("/productos", createProductoController);
+router.get("/productos", getProductos); // Solo BD
+router.get("/productos/:id", getProducto);
+router.put("/productos/:id", updateProductoController);
+router.delete("/productos/:id", deleteProductoController);
 
 export default router;
