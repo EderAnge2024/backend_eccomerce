@@ -5,7 +5,7 @@ import {
   register, login, verifyEmail, requestCode, 
   verifyCodeAndResetPassword, verifyCodeOnly,
   getUsers, getUser, updateUserController, deleteUserController,
-  updateUserInfo
+  updateUserInfo, updateCredentials
 } from "./users/controller.js";
 
 // Importar controladores de pedidos
@@ -15,6 +15,16 @@ import {
   updatePedidoEstadoController, deletePedidoController,
   getPedidosByAdminController
 } from "./pedidos/controller.js";
+
+// Importar controladores de pedidos multi-vendedor
+import {
+  procesarCompraMultiVendedorController,
+  getPedidosByVendedorController,
+  getResumenPedidoMaestroController,
+  previewDivisionPorVendedorController,
+  getNotificacionesPedidosController,
+  marcarNotificacionLeidaController
+} from "./multiple-vender/multi-vendor-controller.js";
 
 // Importar controladores de pedido_producto
 import {
@@ -56,6 +66,9 @@ router.get("/usuarios", getUsers);
 // Ruta para actualizar información del perfil (DEBE IR ANTES de la ruta genérica /:id)
 router.put("/usuarios/update-info/:id", updateUserInfo);
 
+// Ruta para actualizar credenciales (usuario y contraseña)
+router.put("/usuarios/update-credentials/:id", updateCredentials);
+
 router.get("/usuarios/:id", getUser);
 router.put("/usuarios/:id", updateUserController);
 router.delete("/usuarios/:id", deleteUserController);
@@ -67,6 +80,15 @@ router.post("/usuarios/verify-code-reset", verifyCodeAndResetPassword);
 router.post("/usuarios/verify-code", verifyCodeOnly);
 
 // ============ RUTAS DE PEDIDOS ============
+// Rutas multi-vendedor (deben ir primero para evitar conflictos)
+router.post("/pedidos/multi-vendor", procesarCompraMultiVendedorController);
+router.post("/pedidos/preview-division", previewDivisionPorVendedorController);
+router.get("/pedidos/vendedor/:id_vendedor", getPedidosByVendedorController);
+router.get("/pedidos/maestro/:id_pedido_maestro", getResumenPedidoMaestroController);
+router.get("/pedidos/notificaciones/:id_usuario", getNotificacionesPedidosController);
+router.put("/pedidos/notificaciones/:id_notificacion/leer", marcarNotificacionLeidaController);
+
+// Rutas tradicionales
 router.post("/pedidos", createPedidoController);
 router.get("/pedidos", getPedidos);
 router.get("/pedidos/:id", getPedido);

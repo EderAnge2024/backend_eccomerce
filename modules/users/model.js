@@ -45,7 +45,7 @@ export async function updateUser(id_usuario, nombre, apellido, correo, telefono,
   
   const result = await pool.query(
     `UPDATE usuarios SET nombre = $1, apellido = $2, correo = $3, telefono = $4, direccion = $5, rol = $6, usuario = $7 
-     WHERE id_usuario = $8 RETURNING id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario`,
+     WHERE id_usuario = $8 RETURNING id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario, es_super_admin`,
     [nombre, apellido, correo, telefono, direccion, rol, usuario, id_usuario]
   );
   

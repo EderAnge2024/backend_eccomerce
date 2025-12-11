@@ -36,10 +36,14 @@ async function ensureTables() {
     CREATE TABLE IF NOT EXISTS pedidos (
       id_pedido SERIAL PRIMARY KEY,
       id_usuario INT REFERENCES usuarios(id_usuario),
+      id_vendedor INT REFERENCES usuarios(id_usuario),
+      id_pedido_maestro INT REFERENCES pedidos(id_pedido),
       id_ubicacion INT REFERENCES ubicacion(id_ubicacion) ON DELETE SET NULL,
       fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       total DECIMAL(10,2) NOT NULL,
-      estado VARCHAR(20) CHECK (estado IN ('Pendiente','En proceso','Entregado')) DEFAULT 'Pendiente'
+      estado VARCHAR(20) CHECK (estado IN ('Pendiente','En proceso','Entregado')) DEFAULT 'Pendiente',
+      tipo_pedido VARCHAR(20) CHECK (tipo_pedido IN ('maestro','sub_pedido','simple')) DEFAULT 'simple',
+      es_pedido_compartido BOOLEAN DEFAULT false
     );
   `;
 
@@ -77,6 +81,64 @@ async function ensureTables() {
     );
   `;
 
+  const pedidoNotificaciones = `
+    CREATE TABLE IF NOT EXISTS pedido_notificaciones (
+      id_notificacion SERIAL PRIMARY KEY,
+      id_pedido INT REFERENCES pedidos(id_pedido),
+      id_usuario_destinatario INT REFERENCES usuarios(id_usuario),
+      tipo_notificacion VARCHAR(50) NOT NULL,
+      mensaje TEXT NOT NULL,
+      leida BOOLEAN DEFAULT false,
+      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const indices = `
+    CREATE INDEX IF NOT EXISTS idx_pedidos_vendedor ON pedidos(id_vendedor);
+    CREATE INDEX IF NOT EXISTS idx_pedidos_maestro ON pedidos(id_pedido_maestro);
+    CREATE INDEX IF NOT EXISTS idx_pedidos_tipo ON pedidos(tipo_pedido);
+    CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario ON pedido_notificaciones(id_usuario_destinatario);
+    CREATE INDEX IF NOT EXISTS idx_notificaciones_leida ON pedido_notificaciones(leida);
+  `;
+
+  const vista = `
+    CREATE OR REPLACE VIEW vista_pedidos_completa AS
+    SELECT 
+      p.id_pedido,
+      p.id_usuario,
+      p.id_vendedor,
+      p.id_pedido_maestro,
+      p.tipo_pedido,
+      p.es_pedido_compartido,
+      p.fecha_pedido,
+      p.total,
+      p.estado,
+      p.id_ubicacion,
+      -- Información del cliente
+      u_cliente.nombre as cliente_nombre,
+      u_cliente.apellido as cliente_apellido,
+      u_cliente.correo as cliente_correo,
+      -- Información del vendedor
+      u_vendedor.nombre as vendedor_nombre,
+      u_vendedor.apellido as vendedor_apellido,
+      u_vendedor.correo as vendedor_correo,
+      -- Información de ubicación
+      ub.nombre as ubicacion_nombre,
+      ub.direccion as ubicacion_direccion,
+      ub.ciudad as ubicacion_ciudad
+    FROM pedidos p
+    LEFT JOIN usuarios u_cliente ON p.id_usuario = u_cliente.id_usuario
+    LEFT JOIN usuarios u_vendedor ON p.id_vendedor = u_vendedor.id_usuario
+    LEFT JOIN ubicacion ub ON p.id_ubicacion = ub.id_ubicacion;
+  `;
+
+  const comentarios = `
+    COMMENT ON COLUMN pedidos.id_vendedor IS 'ID del vendedor responsable de este pedido (para sub-pedidos)';
+    COMMENT ON COLUMN pedidos.id_pedido_maestro IS 'ID del pedido maestro al que pertenece este sub-pedido';
+    COMMENT ON COLUMN pedidos.tipo_pedido IS 'Tipo: maestro (agrupa sub-pedidos), sub_pedido (para un vendedor), simple (un solo vendedor)';
+    COMMENT ON COLUMN pedidos.es_pedido_compartido IS 'Indica si este pedido maestro tiene productos de múltiples vendedores';
+  `;
+
   try {
     await pool.query( usuarios );
     await pool.query( ubicacion );
@@ -84,12 +146,27 @@ async function ensureTables() {
     await pool.query( pedidoProducto );
     await pool.query( token );
     await pool.query( productos );
-    console.log("Tablas creadas/verificadas correctamente ✔");
+    await pool.query( pedidoNotificaciones );
     
-    // Inicializar usuario administrador
-    await initializeAdmin();
+    // Crear índices
+    await pool.query( indices );
+    
+    // Crear vista
+    await pool.query( vista );
+    
+    // Agregar comentarios
+    await pool.query( comentarios );
+    
+    console.log("✅ Tablas creadas/verificadas correctamente");
+    console.log("✅ Sistema multi-vendedor configurado");
+    console.log("✅ Índices y vista creados");
+    
+    // Inicializar usuario administrador de forma asíncrona
+    initializeAdmin().catch(error => {
+      console.error("❌ Error en inicialización:", error.message);
+    });
   } catch (err) {
-    console.error("Error creando tablas:", err);
+    console.error("❌ Error creando tablas:", err);
   }
 }
 

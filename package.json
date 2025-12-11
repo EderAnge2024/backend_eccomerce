@@ -6,9 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
+    "dev": "node server.js",
     "init": "node test-init.js",
     "setup": "node setup-complete.js",
-    "migrate": "node run-migration.js"
+    "migrate": "node run-migration.js",
+    "check-env": "node scripts/check-env.js"
   },
   "keywords": [],
   "author": "",
