@@ -17,14 +17,14 @@ export async function createUser(nombre, apellido, correo, telefono, direccion, 
 
 // Obtener todos los usuarios
 export async function getAllUsers() {
-  const result = await pool.query("SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario FROM usuarios");
+  const result = await pool.query("SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario, es_super_admin FROM usuarios");
   return result.rows;
 }
 
 // Obtener usuario por ID
 export async function getUserById(id_usuario) {
   const result = await pool.query(
-    "SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario FROM usuarios WHERE id_usuario = $1",
+    "SELECT id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario, es_super_admin FROM usuarios WHERE id_usuario = $1",
     [id_usuario]
   );
   return result.rows[0] || null;
@@ -45,7 +45,7 @@ export async function updateUser(id_usuario, nombre, apellido, correo, telefono,
   
   const result = await pool.query(
     `UPDATE usuarios SET nombre = $1, apellido = $2, correo = $3, telefono = $4, direccion = $5, rol = $6, usuario = $7 
-     WHERE id_usuario = $8 RETURNING id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario`,
+     WHERE id_usuario = $8 RETURNING id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario, es_super_admin`,
     [nombre, apellido, correo, telefono, direccion, rol, usuario, id_usuario]
   );
   

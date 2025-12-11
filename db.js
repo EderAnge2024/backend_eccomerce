@@ -1,13 +1,15 @@
 import pkg from "pg";
+import { ENV_CONFIG } from "./config/env.js";
+
 const { Pool } = pkg;
 
-// Configuración de conexión a PostgreSQL
+// Configuración de conexión a PostgreSQL usando configuración centralizada
 const pool = new Pool({
-  host: "localhost",
-  user: "postgres",
-  password: "edichogenial",
-  database: "ecomerce",
-  port: 5432,
+  host: ENV_CONFIG.DB.HOST,
+  user: ENV_CONFIG.DB.USER,
+  password: ENV_CONFIG.DB.PASSWORD,
+  database: ENV_CONFIG.DB.NAME,
+  port: ENV_CONFIG.DB.PORT,
 });
 
 // Verificar conexión

@@ -6,16 +6,15 @@ import {
 import pool from "../../db.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
-import dotenv from 'dotenv';
+import { ENV_CONFIG } from "../../config/env.js";
 
-dotenv.config();
-
+// se encarga de le envio a la correo del codigo de verificacion
 const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD
+      user: ENV_CONFIG.EMAIL.GMAIL_USER,
+      pass: ENV_CONFIG.EMAIL.GMAIL_APP_PASSWORD
     },
     connectionTimeout: 30000,
     socketTimeout: 30000,
@@ -26,6 +25,7 @@ const createTransporter = () => {
   });
 };
 
+// reintenta el envio si esta falla
 const sendEmailWithRetry = async (mailOptions, maxRetries = 3) => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const transporter = createTransporter();
@@ -45,18 +45,17 @@ const sendEmailWithRetry = async (mailOptions, maxRetries = 3) => {
   }
 };
 
-const VERIFICATION_CODE_EXPIRATION = process.env.VERIFICATION_CODE_EXPIRATION
-  ? parseInt(process.env.VERIFICATION_CODE_EXPIRATION, 10)
-  : 600;
+const VERIFICATION_CODE_EXPIRATION = ENV_CONFIG.EMAIL.VERIFICATION_CODE_EXPIRATION;
 
+// genera el contenido del correo y llama a la funcion de envio
 const sendVerificationCode = async (correo, codigo) => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+  if (!ENV_CONFIG.EMAIL.GMAIL_USER || !ENV_CONFIG.EMAIL.GMAIL_APP_PASSWORD) {
     console.error('❌ Credenciales de correo no configuradas');
     throw new Error('Credenciales de correo no configuradas');
   }
 
   const mailOptions = {
-    from: `"Sistema de Verificación" <${process.env.GMAIL_USER}>`,
+    from: `"Sistema de Verificación" <${ENV_CONFIG.EMAIL.GMAIL_USER}>`,
     to: correo,
     subject: '🔐 Código de Verificación - Recuperación de Contraseña',
     html: `
@@ -307,6 +306,89 @@ export async function verifyEmail(req, res) {
   } catch (err) {
     console.error("Error en verifyEmail:", err);
     res.status(500).json({ success: false, message: "Error al verificar el correo: " + (err?.message || err) });
+  }
+}
+
+// ============ ACTUALIZAR CREDENCIALES ============
+
+export async function updateCredentials(req, res) {
+  const { id } = req.params;
+  const { usuario, contrasena } = req.body;
+  
+  console.log('📝 updateCredentials llamado');
+  console.log('ID:', id);
+  console.log('Body:', { usuario, contrasena: contrasena ? '***' : undefined });
+  
+  if (!usuario || !contrasena) {
+    console.log('❌ Campos faltantes');
+    return res.status(400).json({ 
+      success: false, 
+      message: "Usuario y contraseña son obligatorios" 
+    });
+  }
+
+  try {
+    console.log('🔍 Buscando usuario con ID:', id);
+    const user = await getUserById(id);
+    console.log('Usuario encontrado:', user);
+    
+    if (!user) {
+      console.log('❌ Usuario no encontrado');
+      return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+    }
+
+    // Verificar si el nombre de usuario ya existe en otro usuario
+    if (usuario !== user.usuario) {
+      console.log('👤 Verificando si el usuario ya existe...');
+      const existingUser = await pool.query(
+        "SELECT * FROM usuarios WHERE usuario = $1 AND id_usuario != $2",
+        [usuario, id]
+      );
+      if (existingUser.rows.length > 0) {
+        console.log('❌ Usuario ya existe en otro usuario');
+        return res.status(400).json({ 
+          success: false, 
+          message: "El nombre de usuario ya está en uso" 
+        });
+      }
+    }
+
+    // Actualizar usuario y contraseña
+    console.log('💾 Actualizando credenciales en la base de datos...');
+    
+    // Actualizar nombre de usuario
+    const updatedUser = await updateUser(
+      id, 
+      user.nombre, 
+      user.apellido, 
+      user.correo, 
+      user.telefono, 
+      user.direccion, 
+      user.rol, 
+      usuario
+    );
+    
+    // Actualizar contraseña
+    await updatePassword(user.correo, contrasena);
+    
+    console.log('✅ Credenciales actualizadas');
+    console.log('👤 Usuario actualizado:', updatedUser);
+    
+    const { password_hash, ...userWithoutPassword } = updatedUser;
+    console.log('📤 Enviando respuesta al frontend:', {
+      success: true,
+      message: "Credenciales actualizadas correctamente",
+      user: userWithoutPassword
+    });
+    
+    res.json({ 
+      success: true, 
+      message: "Credenciales actualizadas correctamente",
+      user: userWithoutPassword 
+    });
+  } catch (err) {
+    console.error("❌ Error en updateCredentials:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 }
 

@@ -5,14 +5,26 @@ import {
   register, login, verifyEmail, requestCode, 
   verifyCodeAndResetPassword, verifyCodeOnly,
   getUsers, getUser, updateUserController, deleteUserController,
-  updateUserInfo
+  updateUserInfo, updateCredentials
 } from "./users/controller.js";
 
 // Importar controladores de pedidos
 import {
   createPedidoController, getPedidos, getPedido, 
-  getPedidosByUserController, updatePedidoController, deletePedidoController
+  getPedidosByUserController, updatePedidoController, 
+  updatePedidoEstadoController, deletePedidoController,
+  getPedidosByAdminController
 } from "./pedidos/controller.js";
+
+// Importar controladores de pedidos multi-vendedor
+import {
+  procesarCompraMultiVendedorController,
+  getPedidosByVendedorController,
+  getResumenPedidoMaestroController,
+  previewDivisionPorVendedorController,
+  getNotificacionesPedidosController,
+  marcarNotificacionLeidaController
+} from "./multiple-vender/multi-vendor-controller.js";
 
 // Importar controladores de pedido_producto
 import {
@@ -26,6 +38,24 @@ import {
   updateTokenController, deleteTokenController, cleanExpiredTokensController
 } from "./token/controller.js";
 
+// Importar controladores de ubicación
+import {
+  createUbicacionController, getUbicaciones, getUbicacion,
+  getUbicacionesByUserController, updateUbicacionController, deleteUbicacionController
+} from "./ubicacion/controller.js";
+
+// Importar controladores de productos
+import {
+  createProductoController, getProductos, getProducto,
+  getProductosByUserController, getProductosByCategoryController,
+  updateProductoController, deleteProductoController
+} from "./productos/controller.js";
+
+// Importar controladores de productos combinados
+import {
+  getProductosCombinados, getProductosDB
+} from "./productos/combined-controller.js";
+
 const router = express.Router();
 
 // ============ RUTAS DE USUARIOS ============
@@ -35,6 +65,9 @@ router.get("/usuarios", getUsers);
 
 // Ruta para actualizar información del perfil (DEBE IR ANTES de la ruta genérica /:id)
 router.put("/usuarios/update-info/:id", updateUserInfo);
+
+// Ruta para actualizar credenciales (usuario y contraseña)
+router.put("/usuarios/update-credentials/:id", updateCredentials);
 
 router.get("/usuarios/:id", getUser);
 router.put("/usuarios/:id", updateUserController);
@@ -47,11 +80,22 @@ router.post("/usuarios/verify-code-reset", verifyCodeAndResetPassword);
 router.post("/usuarios/verify-code", verifyCodeOnly);
 
 // ============ RUTAS DE PEDIDOS ============
+// Rutas multi-vendedor (deben ir primero para evitar conflictos)
+router.post("/pedidos/multi-vendor", procesarCompraMultiVendedorController);
+router.post("/pedidos/preview-division", previewDivisionPorVendedorController);
+router.get("/pedidos/vendedor/:id_vendedor", getPedidosByVendedorController);
+router.get("/pedidos/maestro/:id_pedido_maestro", getResumenPedidoMaestroController);
+router.get("/pedidos/notificaciones/:id_usuario", getNotificacionesPedidosController);
+router.put("/pedidos/notificaciones/:id_notificacion/leer", marcarNotificacionLeidaController);
+
+// Rutas tradicionales
 router.post("/pedidos", createPedidoController);
 router.get("/pedidos", getPedidos);
 router.get("/pedidos/:id", getPedido);
 router.get("/pedidos/usuario/:id_usuario", getPedidosByUserController);
+router.get("/pedidos/admin/:id_admin", getPedidosByAdminController); // Pedidos con productos del admin
 router.put("/pedidos/:id", updatePedidoController);
+router.put("/pedidos/:id/estado", updatePedidoEstadoController);
 router.delete("/pedidos/:id", deletePedidoController);
 
 // ============ RUTAS DE PEDIDO_PRODUCTO ============
@@ -70,5 +114,27 @@ router.get("/tokens/usuario/:id_usuario", getTokensByUserController);
 router.put("/tokens/:id", updateTokenController);
 router.delete("/tokens/:id", deleteTokenController);
 router.delete("/tokens/clean/expired", cleanExpiredTokensController);
+
+// ============ RUTAS DE UBICACIÓN ============
+router.post("/ubicaciones", createUbicacionController);
+router.get("/ubicaciones", getUbicaciones);
+router.get("/ubicaciones/:id", getUbicacion);
+router.get("/ubicaciones/usuario/:id_usuario", getUbicacionesByUserController);
+router.put("/ubicaciones/:id", updateUbicacionController);
+router.delete("/ubicaciones/:id", deleteUbicacionController);
+
+// ============ RUTAS DE PRODUCTOS ============
+// Rutas especiales (deben ir primero)
+router.get("/productos/combinados", getProductosCombinados); // BD + API
+router.get("/productos/database", getProductosDB); // Solo BD
+router.get("/productos/usuario/:id_usuario", getProductosByUserController);
+router.get("/productos/categoria/:category", getProductosByCategoryController);
+
+// Rutas CRUD normales
+router.post("/productos", createProductoController);
+router.get("/productos", getProductos); // Solo BD
+router.get("/productos/:id", getProducto);
+router.put("/productos/:id", updateProductoController);
+router.delete("/productos/:id", deleteProductoController);
 
 export default router;

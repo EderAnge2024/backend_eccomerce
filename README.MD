@@ -2,12 +2,12 @@
 
 ## 🚀 Instalación y Ejecución
 
-1. Instalar dependencias:
+### 1. Instalar dependencias:
 ```bash
 npm install
 ```
 
-2. Configurar la base de datos en `db.js`:
+### 2. Configurar la base de datos en `db.js`:
 ```javascript
 const pool = new Pool({
   host: "localhost",
@@ -18,18 +18,54 @@ const pool = new Pool({
 });
 ```
 
-3. Configurar variables de entorno en `.env`:
+### 3. Configurar variables de entorno en `.env`:
 ```env
 GMAIL_USER=tu_correo@gmail.com
 GMAIL_APP_PASSWORD=tu_contraseña_de_aplicacion
 ```
 
-4. Iniciar el servidor:
+### 4. Iniciar el servidor:
 ```bash
 npm start
 ```
 
 El servidor estará disponible en: `http://localhost:3000`
+
+## ⚡ Inicialización Automática
+
+Al iniciar el servidor por primera vez, el sistema automáticamente:
+
+1. ✅ Crea todas las tablas necesarias en PostgreSQL
+2. ✅ Agrega el campo `es_super_admin` si no existe
+3. ✅ Crea el usuario super administrador (ID 1)
+4. ✅ Puebla la base de datos con productos de FakeStore API (solo si está vacía)
+
+### 🔑 Credenciales del Super Admin
+
+- **Usuario:** `superadmin`
+- **Contraseña:** `admin123`
+- **Rol:** Administrador con privilegios especiales
+
+**Importante:** Solo el super admin puede crear otros administradores.
+
+## 🗄️ Scripts Disponibles
+
+### Iniciar el servidor (con inicialización automática)
+```bash
+npm start
+```
+
+### Ejecutar solo la inicialización (sin iniciar servidor)
+```bash
+npm run init
+```
+
+### Ejecutar configuración completa (legacy)
+```bash
+npm run setup
+```
+
+Todos estos scripts realizan la misma inicialización del sistema.
 
 ## 📊 Base de Datos
 
@@ -40,9 +76,11 @@ El sistema crea automáticamente las siguientes tablas en PostgreSQL:
 - **pedido_producto** - Productos asociados a pedidos
 - **token** - Tokens de recuperación de contraseña
 
-## 📚 Documentación API
+## 📚 Documentación
 
-Consulta `API_ENDPOINTS.md` para ver todos los endpoints disponibles.
+- **API Endpoints:** Consulta `API_ENDPOINTS.md` para ver todos los endpoints disponibles
+- **Inicialización:** Consulta `INICIALIZACION.md` para detalles sobre el sistema de inicialización automática
+- **Permisos de Admin:** Consulta `PERMISOS_ADMIN.md` para entender el sistema de permisos y acceso por administrador
 
 ## 🔑 Endpoints Principales
 
