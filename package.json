@@ -10,7 +10,13 @@
     "init": "node test-init.js",
     "setup": "node setup-complete.js",
     "migrate": "node run-migration.js",
-    "check-env": "node scripts/check-env.js"
+    "check-env": "node scripts/check-env.js",
+    "check-config": "node check-config.js",
+    "install-security": "node install-security.js",
+    "security-audit": "npm audit && echo '✅ Security audit completed'",
+    "generate-jwt-secret": "node -e \"console.log('JWT_SECRET=' + require('crypto').randomBytes(64).toString('hex'))\"",
+    "test-security": "echo '🔒 Testing security endpoints...' && curl -s http://localhost:3000/api/usuarios || echo 'Server not running'",
+    "show-admin": "node show-admin-credentials.js"
   },
   "keywords": [],
   "author": "",
@@ -20,9 +26,18 @@
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.3.1",
+    "handlebars": "^4.7.8",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.1",
-    "pg": "^8.11.3"
+    "pdfkit": "^0.17.2",
+    "pg": "^8.11.3",
+    "puppeteer": "^24.34.0"
   }
 }

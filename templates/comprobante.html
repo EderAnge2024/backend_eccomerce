@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante de Venta #{{pedido.id}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            background: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .company-subtitle {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .company-details {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .invoice-info {
+            text-align: right;
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 250px;
+        }
+
+        .invoice-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .invoice-number {
+            font-size: 18px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .invoice-details {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .invoice-details strong {
+            color: #2c3e50;
+        }
+
+        /* CLIENTE INFO */
+        .client-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 30px;
+        }
+
+        .client-info, .shipping-info {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .shipping-info {
+            border-left-color: #27ae60;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-row {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 80px;
+            margin-right: 10px;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        /* TABLA DE PRODUCTOS */
+        .products-section {
+            margin-bottom: 30px;
+        }
+
+        .products-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .products-table th {
+            background: #34495e;
+            color: #fff;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .products-table th:last-child,
+        .products-table td:last-child {
+            text-align: right;
+        }
+
+        .products-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: top;
+        }
+
+        .products-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .products-table tr:hover {
+            background: #e8f4f8;
+        }
+
+        .product-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .product-description {
+            font-size: 10px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .quantity {
+            text-align: center;
+            font-weight: bold;
+            color: #e67e22;
+        }
+
+        .price, .subtotal {
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        /* TOTALES */
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            min-width: 300px;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .totals-table .label {
+            text-align: right;
+            font-weight: bold;
+            color: #555;
+            background: #f8f9fa;
+        }
+
+        .totals-table .value {
+            text-align: right;
+            font-weight: bold;
+            color: #27ae60;
+            background: #fff;
+            min-width: 120px;
+        }
+
+        .totals-table .total-row {
+            border-top: 2px solid #2c3e50;
+            border-bottom: 3px double #2c3e50;
+        }
+
+        .totals-table .total-row .label {
+            background: #2c3e50;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .totals-table .total-row .value {
+            background: #2c3e50;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* ESTADO */
+        .status-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-pendiente {
+            background: #f39c12;
+            color: #fff;
+        }
+
+        .status-proceso {
+            background: #3498db;
+            color: #fff;
+        }
+
+        .status-entregado {
+            background: #27ae60;
+            color: #fff;
+        }
+
+        /* FOOTER */
+        .footer {
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 11px;
+        }
+
+        .footer-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .footer-note {
+            margin-bottom: 5px;
+        }
+
+        .generation-date {
+            font-style: italic;
+            color: #95a5a6;
+            margin-top: 15px;
+        }
+
+        /* UTILIDADES */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: bold; }
+        .text-muted { color: #7f8c8d; }
+
+        /* RESPONSIVE */
+        @media print {
+            .container {
+                padding: 0;
+                max-width: none;
+            }
+            
+            body {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .invoice-info {
+                text-align: left;
+                min-width: auto;
+            }
+            
+            .client-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .products-table {
+                font-size: 10px;
+            }
+            
+            .products-table th,
+            .products-table td {
+                padding: 8px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="company-info">
+                <div class="company-name">E-COMMERCE SYSTEM</div>
+                <div class="company-subtitle">Sistema de Ventas Online</div>
+                <div class="company-details">
+                    <div>📧 contacto@ecommerce.com</div>
+                    <div>📞 +51 999 999 999</div>
+                    <div>🌐 www.ecommerce.com</div>
+                    <div>📍 Lima, Perú</div>
+                </div>
+            </div>
+            <div class="invoice-info">
+                <div class="invoice-title">COMPROBANTE</div>
+                <div class="invoice-number">#{{pedido.id}}</div>
+                <div class="invoice-details">
+                    <div><strong>Fecha:</strong> {{pedido.fecha}}</div>
+                    <div><strong>Hora:</strong> {{pedido.hora}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN DEL CLIENTE Y ENVÍO -->
+        <div class="client-section">
+            <div class="client-info">
+                <div class="section-title">📋 Datos del Cliente</div>
+                <div class="info-row">
+                    <span class="info-label">Nombre:</span>
+                    <span class="info-value">{{cliente.nombre}}</span>
+                </div>
+                {{#if cliente.correo}}
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{cliente.correo}}</span>
+                </div>
+                {{/if}}
+                {{#if cliente.telefono}}
+                <div class="info-row">
+                    <span class="info-label">Teléfono:</span>
+                    <span class="info-value">{{cliente.telefono}}</span>
+                </div>
+                {{/if}}
+                {{#if cliente.direccion}}
+                <div class="info-row">
+                    <span class="info-label">Dirección:</span>
+                    <span class="info-value">{{cliente.direccion}}</span>
+                </div>
+                {{/if}}
+            </div>
+
+            {{#if envio.direccion}}
+            <div class="shipping-info">
+                <div class="section-title">🚚 Dirección de Envío</div>
+                {{#if envio.nombre}}
+                <div class="info-row">
+                    <span class="info-label">Nombre:</span>
+                    <span class="info-value">{{envio.nombre}}</span>
+                </div>
+                {{/if}}
+                <div class="info-row">
+                    <span class="info-label">Dirección:</span>
+                    <span class="info-value">{{envio.direccion}}</span>
+                </div>
+                {{#if envio.ciudad}}
+                <div class="info-row">
+                    <span class="info-label">Ciudad:</span>
+                    <span class="info-value">{{envio.ciudad}}{{#if envio.codigo_postal}} - {{envio.codigo_postal}}{{/if}}</span>
+                </div>
+                {{/if}}
+                {{#if envio.telefono}}
+                <div class="info-row">
+                    <span class="info-label">Teléfono:</span>
+                    <span class="info-value">{{envio.telefono}}</span>
+                </div>
+                {{/if}}
+            </div>
+            {{/if}}
+        </div>
+
+        <!-- ESTADO DEL PEDIDO -->
+        <div class="status-section">
+            <div class="status-badge status-{{pedido.estado_class}}">
+                Estado: {{pedido.estado}}
+            </div>
+        </div>
+
+        <!-- PRODUCTOS -->
+        <div class="products-section">
+            <div class="products-title">📦 Detalle de Productos</div>
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50%">Producto</th>
+                        <th style="width: 15%">Cantidad</th>
+                        <th style="width: 17.5%">Precio Unit.</th>
+                        <th style="width: 17.5%">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each productos}}
+                    <tr>
+                        <td>
+                            <div class="product-name">{{nombre}}</div>
+                            {{#if descripcion}}
+                            <div class="product-description">{{descripcion}}</div>
+                            {{/if}}
+                        </td>
+                        <td class="quantity">{{cantidad}}</td>
+                        <td class="price">S/ {{precio}}</td>
+                        <td class="subtotal">S/ {{subtotal}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TOTALES -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr>
+                    <td class="label">Subtotal:</td>
+                    <td class="value">S/ {{resumen.subtotal}}</td>
+                </tr>
+                <tr>
+                    <td class="label">IGV (18%):</td>
+                    <td class="value">S/ {{resumen.igv}}</td>
+                </tr>
+                <tr class="total-row">
+                    <td class="label">TOTAL:</td>
+                    <td class="value">S/ {{resumen.total}}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <div class="footer-title">¡Gracias por su compra!</div>
+            <div class="footer-note">Este comprobante es válido como constancia de su pedido.</div>
+            <div class="footer-note">Para consultas o reclamos, contacte a nuestro servicio al cliente.</div>
+            <div class="generation-date">
+                Comprobante generado el {{fecha_generacion}}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

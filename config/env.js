@@ -1,65 +1,75 @@
+// Configuración de variables de entorno
+
 import dotenv from 'dotenv';
 
 // Cargar variables de entorno
 dotenv.config();
 
-// Configuración centralizada de variables de entorno
+// Configuración centralizada
 export const ENV_CONFIG = {
-  // Server Configuration
-  PORT: process.env.PORT || 3000,
-  HOST: process.env.HOST || '0.0.0.0',
+  // Configuración del servidor
   NODE_ENV: process.env.NODE_ENV || 'development',
-  
-  // Database Configuration
+  PORT: parseInt(process.env.PORT) || 3000,
+  HOST: process.env.HOST || 'localhost',
+
+  // Configuración de la base de datos
   DB: {
     HOST: process.env.DB_HOST || 'localhost',
-    PORT: process.env.DB_PORT || 5432,
     USER: process.env.DB_USER || 'postgres',
-    PASSWORD: process.env.DB_PASSWORD || 'edichogenial',
-    NAME: process.env.DB_NAME || 'ecomerce',
+    PASSWORD: process.env.DB_PASSWORD || 'admin',
+    NAME: process.env.DB_NAME || 'ecommerce_db',
+    PORT: parseInt(process.env.DB_PORT) || 5432,
   },
-  
-  // Email Configuration
+
+  // Configuración JWT
+  JWT_SECRET: process.env.JWT_SECRET || 'tu_jwt_secret_super_seguro_aqui_2024',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '1h',
+  JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+
+  // Configuración de Email
   EMAIL: {
     GMAIL_USER: process.env.GMAIL_USER,
     GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
-    VERIFICATION_CODE_EXPIRATION: parseInt(process.env.VERIFICATION_CODE_EXPIRATION, 10) || 600,
+    VERIFICATION_CODE_EXPIRATION: parseInt(process.env.VERIFICATION_CODE_EXPIRATION) || 600, // 10 minutos
   },
-  
-  // CORS Configuration
+
+  // Configuración CORS
   CORS: {
     ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS 
-      ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-      : ['http://localhost:3000', 'http://localhost:8081'],
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : [
+          'http://localhost:3000',
+          'http://localhost:3001', 
+          'http://localhost:8081',
+          'http://192.168.43.132:8081'
+        ]
   },
-  
-  // Helper functions
+
+  // Configuración de Rate Limiting
+  RATE_LIMIT: {
+    WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
+    MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+    LOGIN_MAX_REQUESTS: parseInt(process.env.LOGIN_RATE_LIMIT_MAX_REQUESTS) || 5,
+    REGISTER_MAX_REQUESTS: parseInt(process.env.REGISTER_RATE_LIMIT_MAX_REQUESTS) || 3,
+    VERIFICATION_MAX_REQUESTS: parseInt(process.env.VERIFICATION_RATE_LIMIT_MAX_REQUESTS) || 10,
+    ADMIN_MAX_REQUESTS: parseInt(process.env.ADMIN_RATE_LIMIT_MAX_REQUESTS) || 50,
+  },
+
+  // Funciones de utilidad
   isDevelopment: () => ENV_CONFIG.NODE_ENV === 'development',
   isProduction: () => ENV_CONFIG.NODE_ENV === 'production',
-  
-  // Validation functions
-  validateEmailConfig: () => {
-    if (!ENV_CONFIG.EMAIL.GMAIL_USER || !ENV_CONFIG.EMAIL.GMAIL_APP_PASSWORD) {
-      console.warn('⚠️  Email configuration incomplete. Email features may not work.');
-      return false;
-    }
-    return true;
-  },
-  
-  // Log configuration (only in development)
+
+  // Función para logging de configuración
   logConfig: () => {
     if (ENV_CONFIG.isDevelopment()) {
-      console.log('🔧 Backend Configuration:');
-      console.log(`  - Environment: ${ENV_CONFIG.NODE_ENV}`);
-      console.log(`  - Server: http://${ENV_CONFIG.HOST}:${ENV_CONFIG.PORT}`);
-      console.log(`  - Database: ${ENV_CONFIG.DB.HOST}:${ENV_CONFIG.DB.PORT}/${ENV_CONFIG.DB.NAME}`);
-      console.log(`  - Email configured: ${ENV_CONFIG.validateEmailConfig() ? '✅' : '❌'}`);
-      console.log(`  - CORS origins: ${ENV_CONFIG.CORS.ALLOWED_ORIGINS.join(', ')}`);
+      console.log('\n🔧 ===== CONFIGURACIÓN DE DESARROLLO =====');
+      console.log(`📊 Base de datos: ${ENV_CONFIG.DB.HOST}:${ENV_CONFIG.DB.PORT}/${ENV_CONFIG.DB.NAME}`);
+      console.log(`🔑 JWT Secret: ${ENV_CONFIG.JWT_SECRET.substring(0, 10)}...`);
+      console.log(`📧 Email configurado: ${!!ENV_CONFIG.EMAIL.GMAIL_USER}`);
+      console.log(`🌐 CORS Origins: ${ENV_CONFIG.CORS.ALLOWED_ORIGINS.length} configurados`);
+      console.log('==========================================\n');
     }
   }
 };
-
-// Validate configuration on import
-ENV_CONFIG.validateEmailConfig();
 
 export default ENV_CONFIG;
