@@ -1,2 +1,3 @@
 .env
 reset-superadmin-password.js
+update-admin-super.js
