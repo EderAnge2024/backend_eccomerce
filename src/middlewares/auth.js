@@ -7,12 +7,16 @@ import { verifyToken, isTokenExpiringSoon } from '../utils/jwt.js';
 export const requireAuth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return errorResponse(res, 'Access token required. Format: Bearer <token>', 401);
+    let token = null;
+
+    // Intentar obtener token del header Authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } 
+    // Intentar obtener token de la cookie
+    else if (req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
     }
-    
-    const token = authHeader.split(' ')[1];
     
     if (!token) {
       return errorResponse(res, 'Access token required', 401);
@@ -111,7 +115,12 @@ export const optionalAuth = (req, res, next) => {
       token = authHeader.split(' ')[1];
     }
     
-    // Si no hay token en el header, intentar obtenerlo del query parameter
+    // Si no hay token en el header, intentar obtenerlo de cookies
+    if (!token && req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
+    }
+    
+    // Si no hay token, intentar obtenerlo del query parameter
     if (!token && req.query.token) {
       token = req.query.token;
     }

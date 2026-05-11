@@ -57,7 +57,7 @@ export async function updatePedidoProducto(id_proPedido, cantidad, precio) {
 // Eliminar pedido_producto
 export async function deletePedidoProducto(id_proPedido) {
   const result = await pool.query(
-    "DELETE FROM pedido_producto WHERE id_proPedido = $1 RETURNING *", 
+    "DELETE FROM pedido_producto WHERE id_proPedido = $1 RETURNING *",
     [id_proPedido]
   );
   return result.rows[0];

@@ -34,14 +34,21 @@ export const errorHandler = (err, req, res, next) => {
 
   // Error por defecto
   const statusCode = err.statusCode || 500;
+  
+  // En producción, no mostrar mensajes de error internos detallados
+  let message = err.message || 'Error interno del servidor';
+  if (ENV_CONFIG.isProduction() && statusCode === 500 && !err.isPublic) {
+    message = 'Error interno del servidor';
+  }
+
   const response = {
     success: false,
-    message: err.message || 'Error interno del servidor',
+    message,
     timestamp: new Date().toISOString()
   };
 
-  // Solo incluir stack trace en desarrollo
-  if (ENV_CONFIG.isDevelopment()) {
+  // Solo incluir stack trace si no estamos en producción y estamos explícitamente en desarrollo
+  if (!ENV_CONFIG.isProduction() && ENV_CONFIG.isDevelopment()) {
     response.stack = err.stack;
   }
 

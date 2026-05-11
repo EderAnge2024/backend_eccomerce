@@ -1,3 +1,23 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno
 .env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Scripts de mantenimiento/seguridad
 reset-superadmin-password.js
 update-admin-super.js
+test-security.js
+check-config.js
+
+# IDEs y Sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

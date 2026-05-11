@@ -66,7 +66,7 @@ export const sanitizeString = (str, maxLength = 255) => {
   // Remover caracteres peligrosos y limitar longitud
   return str
     .trim()
-    .replace(/[<>'"&]/g, '') // Prevenir XSS básico
+    .replace(/[<>]/g, '') // Prevenir XSS básico (manteniendo comillas para nombres como O'Connor)
     .replace(/[\x00-\x1f\x7f-\x9f]/g, '') // Remover caracteres de control
     .substring(0, maxLength);
 };

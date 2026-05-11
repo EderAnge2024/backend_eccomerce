@@ -9,23 +9,23 @@ dotenv.config();
 export const ENV_CONFIG = {
   // Configuración del servidor
   NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: parseInt(process.env.PORT) || 3000,
+  PORT: Number(process.env.PORT) || 3000,
   HOST: process.env.HOST || 'localhost',
 
   // Configuración de la base de datos
   DB: {
-    HOST: process.env.DB_HOST || 'localhost',
-    USER: process.env.DB_USER || 'postgres',
-    PASSWORD: process.env.DB_PASSWORD || 'admin',
-    NAME: process.env.DB_NAME || 'ecommerce_db',
-    PORT: parseInt(process.env.DB_PORT) || 5432,
+    HOST: process.env.DB_HOST,
+    USER: process.env.DB_USER,
+    PASSWORD: process.env.DB_PASSWORD,
+    NAME: process.env.DB_NAME,
+    PORT: Number(process.env.DB_PORT) || 5432,
   },
 
   // Configuración JWT
-  JWT_SECRET: process.env.JWT_SECRET || 'tu_jwt_secret_super_seguro_aqui_2024',
+  JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '1h',
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-
+  
   // Configuración de Email
   EMAIL: {
     GMAIL_USER: process.env.GMAIL_USER,
@@ -64,7 +64,7 @@ export const ENV_CONFIG = {
     if (ENV_CONFIG.isDevelopment()) {
       console.log('\n🔧 ===== CONFIGURACIÓN DE DESARROLLO =====');
       console.log(`📊 Base de datos: ${ENV_CONFIG.DB.HOST}:${ENV_CONFIG.DB.PORT}/${ENV_CONFIG.DB.NAME}`);
-      console.log(`🔑 JWT Secret: ${ENV_CONFIG.JWT_SECRET.substring(0, 10)}...`);
+      console.log(`🔑 JWT Secret: OK curioso`);
       console.log(`📧 Email configurado: ${!!ENV_CONFIG.EMAIL.GMAIL_USER}`);
       console.log(`🌐 CORS Origins: ${ENV_CONFIG.CORS.ALLOWED_ORIGINS.length} configurados`);
       console.log('==========================================\n');
@@ -72,4 +72,25 @@ export const ENV_CONFIG = {
   }
 };
 
+const requiredEnv = [
+  'DB_HOST',
+  'DB_USER',
+  'DB_PASSWORD',
+  'DB_NAME',
+  'JWT_SECRET'
+];
+
+requiredEnv.forEach((key) => {
+  if (!process.env[key]) {
+    console.error(`❌ Falta la variable de entorno: ${key}`);
+    process.exit(1);
+  }
+});
+
+if (!process.env.JWT_SECRET) {
+  console.error('❌ JWT_SECRET no está definido en el .env');
+  process.exit(1);
+}
+
 export default ENV_CONFIG;
+

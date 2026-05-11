@@ -1,6 +1,6 @@
 import express from "express";
 import { 
-  register, login, verifyEmail, requestCode, 
+  register, login, logout, verifyEmail, requestCode, 
   verifyCodeAndResetPassword, verifyCodeOnly,
   getUsers, getUser, updateUserController, deleteUserController,
   updateUserInfo, updateCredentials,
@@ -15,6 +15,7 @@ const router = express.Router();
 // ============ RUTAS DE AUTENTICACIÓN (CON RATE LIMITING) ============
 router.post("/register", registerLimiter, validateUserRegistration, register);
 router.post("/login", loginLimiter, validateUserLogin, login);
+router.post("/logout", logout);
 
 // ============ RUTAS DE RECUPERACIÓN DE CONTRASEÑA (CON RATE LIMITING) ============
 router.post("/verify-email", verificationCodeLimiter, verifyEmail);
@@ -52,7 +53,7 @@ router.put("/promote-admin/:id", requireAuth, requireSuperAdmin, adminLimiter, p
 // Solo el super administrador puede degradar administradores a clientes
 router.put("/demote-admin/:id", requireAuth, requireSuperAdmin, adminLimiter, demoteAdmin);
 
-// Ruta para actualizar estado de super administrador (temporal para desarrollo)
-router.post("/update-super-admin", updateSuperAdminStatus);
+// Ruta para actualizar estado de super administrador (RESTRINGIDA)
+router.post("/update-super-admin", requireAuth, requireSuperAdmin, adminLimiter, updateSuperAdminStatus);
 
 export default router;

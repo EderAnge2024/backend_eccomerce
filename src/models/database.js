@@ -1,5 +1,6 @@
 import pool from "../../db.js";
-import { initializeAdmin } from "../services/adminService.js";
+import { initializeSuperAdmin } from "../services/superadminService.js";
+import { seedInitialProducts } from "../services/productSeedService.js";
 
 // Crear tablas automáticamente
 async function ensureTables() {
@@ -77,6 +78,7 @@ async function ensureTables() {
       image VARCHAR(500),
       rating_rate DECIMAL(3,2),
       rating_count INT,
+      stock INT DEFAULT 0,
       fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
@@ -114,15 +116,12 @@ async function ensureTables() {
       p.total,
       p.estado,
       p.id_ubicacion,
-      -- Información del cliente
       u_cliente.nombre as cliente_nombre,
       u_cliente.apellido as cliente_apellido,
       u_cliente.correo as cliente_correo,
-      -- Información del vendedor
       u_vendedor.nombre as vendedor_nombre,
       u_vendedor.apellido as vendedor_apellido,
       u_vendedor.correo as vendedor_correo,
-      -- Información de ubicación
       ub.nombre as ubicacion_nombre,
       ub.direccion as ubicacion_direccion,
       ub.ciudad as ubicacion_ciudad
@@ -133,10 +132,10 @@ async function ensureTables() {
   `;
 
   const comentarios = `
-    COMMENT ON COLUMN pedidos.id_vendedor IS 'ID del vendedor responsable de este pedido (para sub-pedidos)';
-    COMMENT ON COLUMN pedidos.id_pedido_maestro IS 'ID del pedido maestro al que pertenece este sub-pedido';
-    COMMENT ON COLUMN pedidos.tipo_pedido IS 'Tipo: maestro (agrupa sub-pedidos), sub_pedido (para un vendedor), simple (un solo vendedor)';
-    COMMENT ON COLUMN pedidos.es_pedido_compartido IS 'Indica si este pedido maestro tiene productos de múltiples vendedores';
+    COMMENT ON COLUMN pedidos.id_vendedor IS 'ID del vendedor responsable';
+    COMMENT ON COLUMN pedidos.id_pedido_maestro IS 'ID del pedido maestro';
+    COMMENT ON COLUMN pedidos.tipo_pedido IS 'maestro, sub_pedido, simple';
+    COMMENT ON COLUMN pedidos.es_pedido_compartido IS 'Productos de multiples vendedores';
   `;
 
   try {
@@ -148,23 +147,31 @@ async function ensureTables() {
     await pool.query( productos );
     await pool.query( pedidoNotificaciones );
     
-    // Crear índices
     await pool.query( indices );
-    
-    // Crear vista
     await pool.query( vista );
-    
-    // Agregar comentarios
     await pool.query( comentarios );
     
     console.log("✅ Tablas creadas/verificadas correctamente");
     console.log("✅ Sistema multi-vendedor configurado");
     console.log("✅ Índices y vista creados");
     
-    // Inicializar usuario administrador de forma asíncrona
-    initializeAdmin().catch(error => {
-      console.error("❌ Error en inicialización:", error.message);
-    });
+    // Inicializar superadmin (NO se crea admin normal)
+    const superAdmin = await initializeSuperAdmin();
+    
+    // Poblar productos iniciales SOLO si hay superadmin y no hay productos aún
+    if (superAdmin) {
+      const countRes = await pool.query("SELECT COUNT(*) as count FROM productos");
+      const count = parseInt(countRes.rows[0].count);
+      if (count === 0) {
+        await seedInitialProducts();
+      } else {
+        console.log(`ℹ️  Ya existen ${count} productos en la base de datos`);
+      }
+      
+      console.log("\n🚀 Sistema listo. Superadmin disponible.");
+      console.log("   Credenciales: superadmin / admin123");
+    }
+      
   } catch (err) {
     console.error("❌ Error creando tablas:", err);
   }

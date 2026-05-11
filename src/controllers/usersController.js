@@ -201,6 +201,17 @@ export async function register(req, res) {
     
     console.log('✅ Usuario registrado exitosamente:', newUser.usuario);
     
+    // Configurar cookies para los tokens
+    const cookieOptions = {
+      httpOnly: true,
+      secure: ENV_CONFIG.isProduction(),
+      sameSite: ENV_CONFIG.isProduction() ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días (máximo entre access y refresh)
+    };
+
+    res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); // 15 min
+    res.cookie('refreshToken', refreshToken, cookieOptions);
+    
     return successResponse(res, {
       user: userWithoutPassword,
       tokens: {
@@ -242,6 +253,17 @@ export async function login(req, res) {
       
       console.log(`✅ Login exitoso para usuario: ${user.usuario}`);
       
+      // Configurar cookies para los tokens
+      const cookieOptions = {
+        httpOnly: true,
+        secure: ENV_CONFIG.isProduction(),
+        sameSite: ENV_CONFIG.isProduction() ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
+      };
+
+      res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); // 15 min
+      res.cookie('refreshToken', refreshToken, cookieOptions);
+      
       return successResponse(res, {
         user: userWithoutPassword,
         tokens: {
@@ -258,6 +280,13 @@ export async function login(req, res) {
     console.error('❌ Error en login:', err);
     return errorResponse(res, 'Error interno del servidor', 500, err);
   }
+}
+
+export async function logout(req, res) {
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
+  console.log('🚪 Sesión cerrada y cookies eliminadas');
+  return res.json({ success: true, message: 'Sesión cerrada correctamente' });
 }
 
 // ============ RECUPERACIÓN DE CONTRASEÑA ============
@@ -938,6 +967,12 @@ export async function updateSuperAdminStatus(req, res) {
   }
   
   try {
+    // DOBLE CAPA DE SEGURIDAD: Verificar que el usuario que hace la petición es superadmin
+    if (!req.user || !req.user.es_super_admin) {
+      console.warn(`🚨 Intento no autorizado de cambiar estado SuperAdmin por: ${req.user?.usuario || 'desconocido'}`);
+      return errorResponse(res, 'Solo el Super Administrador puede realizar esta acción', 403);
+    }
+
     // Actualizar el campo es_super_admin
     const result = await pool.query(
       'UPDATE usuarios SET es_super_admin = $1 WHERE id_usuario = $2 RETURNING id_usuario, nombre, apellido, correo, telefono, direccion, rol, usuario, es_super_admin',

@@ -1,26 +1,29 @@
 import { getAllProductos } from "../models/productos/model.js";
 import fetch from "node-fetch";
 
-// Obtener productos combinados de BD y API
+// Obtener productos (Prioriza BD, usa API solo como respaldo/poblado)
 export async function getProductosCombinados(req, res) {
   try {
-    console.log('🔍 Obteniendo productos combinados...');
+    console.log('🔍 Obteniendo productos...');
 
     // 1. Obtener productos de la BD
-    const productosDB = await getAllProductos();
-    console.log(`   📦 Productos de BD: ${productosDB.length}`);
+    let productosDB = await getAllProductos();
+    console.log(`   📦 Productos encontrados en BD: ${productosDB.length}`);
 
-    // 2. Obtener productos de FakeStore API
+    // 2. Si la BD está vacía, intentamos obtener de la API para mostrar algo (Fallback)
     let productosAPI = [];
-    try {
-      const response = await fetch("https://fakestoreapi.com/products");
-      productosAPI = await response.json();
-      console.log(`   🌐 Productos de API: ${productosAPI.length}`);
-    } catch (error) {
-      console.error('   ⚠️ Error obteniendo productos de API:', error.message);
+    if (productosDB.length === 0) {
+      console.log('   ⚠️ Base de datos vacía. Intentando cargar desde API externa...');
+      try {
+        const response = await fetch("https://fakestoreapi.com/products");
+        productosAPI = await response.json();
+        console.log(`   🌐 Productos obtenidos de API: ${productosAPI.length}`);
+      } catch (error) {
+        console.error('   ❌ Error obteniendo productos de API:', error.message);
+      }
     }
 
-    // 3. Transformar productos de BD al formato de la API
+    // 3. Transformar productos de BD
     const productosDBTransformados = productosDB.map(p => ({
       id: p.id_producto,
       title: p.title,
@@ -32,29 +35,31 @@ export async function getProductosCombinados(req, res) {
         rate: p.rating_rate ? parseFloat(p.rating_rate) : 0,
         count: p.rating_count || 0
       },
-      stock: p.stock || 0, // ✅ AGREGADO: Campo stock
-      source: 'database' // Identificador de origen
+      stock: p.stock || 0,
+      source: 'database'
     }));
 
-    // 4. Transformar productos de API
+    // 4. Transformar productos de API (solo si la BD estaba vacía)
     const productosAPITransformados = productosAPI.map(p => ({
       ...p,
-      stock: 999, // ✅ AGREGADO: Stock por defecto para productos de API externa
-      source: 'api' // Identificador de origen
+      stock: 0,
+      source: 'api_fallback'
     }));
 
-    // 5. Combinar productos (BD primero, luego API)
-    const productosCombinados = [...productosDBTransformados, ...productosAPITransformados];
+    // 5. El resultado final
+    const productosFinales = productosDBTransformados.length > 0 
+      ? productosDBTransformados 
+      : productosAPITransformados;
 
-    console.log(`   ✅ Total productos combinados: ${productosCombinados.length}`);
+    console.log(`   ✅ Enviando ${productosFinales.length} productos.`);
 
     res.json({
       success: true,
-      productos: productosCombinados,
+      productos: productosFinales,
       stats: {
         database: productosDBTransformados.length,
-        api: productosAPITransformados.length,
-        total: productosCombinados.length
+        api_fallback: productosAPITransformados.length,
+        total: productosFinales.length
       }
     });
   } catch (error) {
